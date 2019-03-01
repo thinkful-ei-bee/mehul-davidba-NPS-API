@@ -1,47 +1,69 @@
 'use strict';
-
+/* global $ */
 // put your own value below!
-const apiKey = ''; 
-const searchURL = 'https://www.googleapis.com/youtube/v3/search';
+const apiKey = '659Fq5ZqMx7bgX5sNdDnt0fJ2dKnDw71ccWeLnsn'; 
+const searchURL = 'https://api.nps.gov/api/v1/parks';
 
 
 function formatQueryParams(params) {
-  const queryItems = Object.keys(params)
-    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
-  return queryItems.join('&');
+  // const queryItems = Object.keys(params)
+  //  .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+  // return queryItems.join('&');
+
+  const queryItems = Object.keys(params).map(function(key) {
+    
+    if(key === 'stateCode')
+    { let stateURL = '';
+      for(let x = 0; x<params.stateCode.length;x++)
+      {
+        stateURL += `stateCode=${params.stateCode[x]}&`;
+      }
+      
+      console.log(stateURL);
+      return stateURL;
+    }
+    else{
+
+      return `${key}=${params[key]}`;
+    }
+    
+  });
+  return queryItems.join('');
+
+
 }
 
 function displayResults(responseJson) {
   // if there are previous results, remove them
-  console.log(responseJson);
+ 
   $('#results-list').empty();
   // iterate through the items array
-  for (let i = 0; i < responseJson.items.length; i++){
+  let  allContent = '';
+  for (let i = 0; i < responseJson.data.length-1; i++){
     // for each video object in the items 
     //array, add a list item to the results 
     //list with the video title, description,
     //and thumbnail
-    $('#results-list').append(
-      `<li><h3>${responseJson.items[i].snippet.title}</h3>
-      <p>${responseJson.items[i].snippet.description}</p>
-      <img src='${responseJson.items[i].snippet.thumbnails.default.url}'>
-      </li>`
-    )};
+    allContent  +=    `<li><h3>${responseJson.data[i].fullName}</h3>
+    <p>${responseJson.data[i].description}</p>
+    <p>${responseJson.data[i].url} </p> 
+    </li>`;
+  }
+
+  $('#results-list').html(
+    allContent);
   //display the results section  
   $('#results').removeClass('hidden');
-};
+}
 
-function getYouTubeVideos(query, maxResults=10) {
+function getParkDetails(query, maxResults=10) {
+  let query_parsed = query.split(' ');
   const params = {
-    key: apiKey,
-    q: query,
-    part: 'snippet',
-    maxResults,
-    type: 'video'
+    stateCode: query_parsed,
+    limit: maxResults,
   };
-  const queryString = formatQueryParams(params)
+  const queryString = formatQueryParams(params);
   const url = searchURL + '?' + queryString;
-
   console.log(url);
 
   fetch(url)
@@ -62,7 +84,7 @@ function watchForm() {
     event.preventDefault();
     const searchTerm = $('#js-search-term').val();
     const maxResults = $('#js-max-results').val();
-    getYouTubeVideos(searchTerm, maxResults);
+    getParkDetails(searchTerm, maxResults);
   });
 }
 
